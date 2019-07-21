@@ -1,0 +1,6 @@
+/venv
+/.idea
+/num.db
+/__pypackages__
+
+/url.py
