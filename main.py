@@ -49,7 +49,6 @@ def main(only_update=False):
     with open(num_db_filename, "a")as f:
         for item in data:
             try:
-                print(item)
                 num = int(item["id"])
                 if num in db:
                     continue
