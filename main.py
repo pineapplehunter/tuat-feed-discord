@@ -19,19 +19,20 @@ class Info:
     important: bool
     about: str
     info: str
+    category: str
     sender: str
     dates: str
 
     def format_info(self) -> str:
         s = ""
-        s += "┌─────────────────────\n"
         # if self.important:
         #     s += "**重要**\n"
+        s += f"カテゴリ: {self.category}\n"
         s += f"件名: {self.about}\n"
         s += f"内容: \n```\n{self.info}\n```\n"
         s += f"from: {self.sender}\n"
         s += f"日付: {self.dates}\n"
-        s += "└─────────────────────"
+        s += "─────────────────────"
         return s
 
 
@@ -58,6 +59,7 @@ def main(only_update=False):
                     important=False,
                     about=item["data"]["タイトル"],
                     info=item["data"]["本文"],
+                    category=item["data"]["カテゴリー"],
                     sender=item["data"]["発信元"],
                     dates=item["data"]["最終更新日"]
                 )
