@@ -1,6 +1,7 @@
 /venv
 /.idea
 /num.db
-/__pypackages__
+__pypackages__
+__pycache__
 
 /url.py

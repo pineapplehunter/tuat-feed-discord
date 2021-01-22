@@ -1,6 +1,4 @@
 import requests
-from bs4 import BeautifulSoup
-import chardet
 from dataclasses import dataclass
 import os
 from sys import argv
@@ -27,8 +25,8 @@ class Info:
         s = ""
         # if self.important:
         #     s += "**重要**\n"
+        s += f"{self.about}\n"
         s += f"カテゴリ: {self.category}\n"
-        s += f"件名: {self.about}\n"
         s += f"内容: \n```\n{self.info}\n```\n"
         s += f"from: {self.sender}\n"
         s += f"日付: {self.dates}\n"
