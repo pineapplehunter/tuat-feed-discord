@@ -4,6 +4,8 @@ import os
 from sys import argv
 from url import DISCORD_WEBHOOK_URL
 import json
+from datetime import datetime
+import time
 
 url = r"https://api.ihavenojob.work/tuat/"
 post_url = DISCORD_WEBHOOK_URL
@@ -21,17 +23,29 @@ class Info:
     sender: str
     dates: str
 
-    def format_info(self) -> str:
-        s = ""
-        # if self.important:
-        #     s += "**重要**\n"
-        s += f"{self.about}\n"
-        s += f"カテゴリ: {self.category}\n"
-        s += f"内容: \n```\n{self.info}\n```\n"
-        s += f"from: {self.sender}\n"
-        s += f"日付: {self.dates}\n"
-        s += "─────────────────────"
-        return s
+    def into_responce(self) -> dict:
+        date = datetime.strptime(self.dates[0:-5], "%Y/%m/%d")
+        return {
+            "content": None,
+            "embeds": [
+                {
+                    "title": self.about,
+                    "description": self.info,
+                    "color": 8912728,
+                    "fields": [
+                        {
+                            "name": "カテゴリ",
+                            "value": self.category,
+                        }
+                    ],
+                    "author": {
+                        "name": self.sender,
+                        "icon_url": "https://www.tuat.ac.jp/images/tuat/outline/disclosure/pressrelease/2013/201312061125161043231738.jpg",
+                    },
+                    "timestamp": date.isoformat(),
+                }
+            ],
+        }
 
 
 def main(only_update=False):
@@ -45,7 +59,7 @@ def main(only_update=False):
 
     db = list(map(lambda x: int(x.strip()), db))
     # print(db)
-    with open(num_db_filename, "a")as f:
+    with open(num_db_filename, "a") as f:
         for item in data:
             try:
                 num = int(item["id"])
@@ -59,13 +73,17 @@ def main(only_update=False):
                     info=item["data"]["本文"],
                     category=item["data"]["カテゴリー"],
                     sender=item["data"]["発信元"],
-                    dates=item["data"]["最終更新日"]
+                    dates=item["data"]["最終更新日"],
                 )
 
                 # print(d)
                 if not only_update:
-                    ret = requests.post(post_url, data={"content": d.format_info()})
-                    # print(ret)
+                    while True:
+                        ret = requests.post(post_url, json=d.into_responce())
+                        print(ret.status_code, ret.content)
+                        if ret.status_code // 100 == 2:
+                            break
+                        time.sleep(10)
                 f.write(str(num) + "\n")
 
             except Exception as e:
