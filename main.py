@@ -8,6 +8,7 @@ from datetime import datetime
 import time
 
 url = r"https://api.ihavenojob.work/tuat/"
+# url = r"http://localhost:8000/"
 post_url = DISCORD_WEBHOOK_URL
 
 num_db_filename = "num.db"
@@ -22,9 +23,26 @@ class Info:
     category: str
     sender: str
     dates: str
+    attachment: str
 
     def into_responce(self) -> dict:
         date = datetime.strptime(self.dates[0:-5], "%Y/%m/%d")
+        if self.attachment is not None:
+            fields = [
+                {
+                    "name": "カテゴリ",
+                    "value": self.category,
+                },
+                {"name": "添付ファイル", "value": self.attachment},
+            ]
+        else:
+            fields = [
+                {
+                    "name": "カテゴリ",
+                    "value": self.category,
+                }
+            ]
+
         return {
             "content": None,
             "embeds": [
@@ -32,12 +50,7 @@ class Info:
                     "title": self.about,
                     "description": self.info,
                     "color": 8912728,
-                    "fields": [
-                        {
-                            "name": "カテゴリ",
-                            "value": self.category,
-                        }
-                    ],
+                    "fields": fields,
                     "author": {
                         "name": self.sender,
                         "icon_url": "https://www.tuat.ac.jp/images/tuat/outline/disclosure/pressrelease/2013/201312061125161043231738.jpg",
@@ -74,9 +87,9 @@ def main(only_update=False):
                     category=item["data"]["カテゴリー"],
                     sender=item["data"]["発信元"],
                     dates=item["data"]["最終更新日"],
+                    attachment=item["data"]["添付ファイル"],
                 )
 
-                # print(d)
                 if not only_update:
                     while True:
                         ret = requests.post(post_url, json=d.into_responce())

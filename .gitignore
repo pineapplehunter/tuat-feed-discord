@@ -3,5 +3,5 @@
 /num.db
 __pypackages__
 __pycache__
-
 /url.py
+/.vscode
