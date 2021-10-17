@@ -3,7 +3,6 @@ from dataclasses import dataclass
 import os
 from sys import argv
 from url import DISCORD_WEBHOOK_URL
-import json
 from datetime import datetime
 import time
 
@@ -62,7 +61,7 @@ class Info:
 
 
 def main(only_update=False):
-    data = json.loads(requests.get(url).content)
+    data = requests.get(url).json()
 
     db = []
     if not os.path.exists(num_db_filename):
@@ -79,15 +78,17 @@ def main(only_update=False):
                 if num in db:
                     continue
 
+                item_data = item["data"]
+
                 d = Info(
                     num=num,
                     important=False,
-                    about=item["data"]["タイトル"],
-                    info=item["data"]["本文"],
-                    category=item["data"]["カテゴリー"],
-                    sender=item["data"]["発信元"],
-                    dates=item["data"]["最終更新日"],
-                    attachment=item["data"]["添付ファイル"],
+                    about=item_data["タイトル"] if "タイトル" in item_data else None,
+                    info=item_data["本文"] if "本文" in item_data else None,
+                    category=item_data["カテゴリー"] if "カテゴリー" in item_data else None,
+                    sender=item_data["発信元"] if "発信元" in item_data else None,
+                    dates=item_data["最終更新日"] if "最終更新日" in item_data else None,
+                    attachment=item_data["添付ファイル"] if "添付ファイル" in item_data else None,
                 )
 
                 if not only_update:
