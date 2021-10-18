@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import os
 from sys import argv
 from url import DISCORD_WEBHOOK_URL
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import time
 
 url = r"https://api.ihavenojob.work/tuat/"
@@ -25,7 +25,16 @@ class Info:
     attachment: str
 
     def into_responce(self) -> dict:
-        date = datetime.strptime(self.dates[0:-5], "%Y/%m/%d")
+        date_get = datetime.strptime(self.dates[0:-5], "%Y/%m/%d")
+        date_now = datetime.now()
+        date = datetime(
+            date_get.year,
+            date_get.month,
+            date_get.day,
+            date_now.hour,
+            (date_now.min // 10) * 10,
+            tzinfo=timezone(timedelta(hours=9)),
+        )
         if self.attachment is not None:
             fields = [
                 {
