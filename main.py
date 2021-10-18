@@ -32,7 +32,7 @@ class Info:
             date_get.month,
             date_get.day,
             date_now.hour,
-            (date_now.min // 10) * 10,
+            (date_now.minute // 10) * 10,
             tzinfo=timezone(timedelta(hours=9)),
         )
         if self.attachment is not None:
