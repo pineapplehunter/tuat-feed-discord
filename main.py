@@ -1,6 +1,6 @@
-from dataclasses import dataclass
 import os
 from sys import argv
+from typing import List, Union
 
 from tuat_feed.post import Post
 from url import DISCORD_WEBHOOK_URL
@@ -11,7 +11,7 @@ import requests
 
 url = r"https://api.ihavenojob.work/tuat/"
 # url = r"http://localhost:8000/"
-post_url = DISCORD_WEBHOOK_URL
+post_url: Union[str, List[str]] = DISCORD_WEBHOOK_URL
 
 num_db_filename = "num.db"
 
@@ -63,18 +63,25 @@ def main(only_update=False):
                 if num in db:
                     continue
 
-                if not only_update:
-                    while True:
-                        ret = requests.post(post_url, json=format_post(post))
-                        print(ret.status_code, ret.content)
-                        if ret.status_code // 100 == 2:
-                            break
-                        time.sleep(10)
+                global post_url
+                if type(post_url) is str:
+                    post_url = [post_url]
+                
+                print(post_url)
+
+                for pu in post_url:
+                    if not only_update:
+                        while True:
+                            ret = requests.post(pu, json=format_post(post))
+                            print(ret.status_code, ret.content)
+                            if ret.status_code // 100 == 2:
+                                break
+                            time.sleep(10)
                 f.write(str(num) + "\n")
 
             except Exception as e:
                 if not only_update:
-                    requests.post(post_url, data={"content": str(e)})
+                    requests.post(pu, data={"content": str(e)})
 
 
 if __name__ == "__main__":
