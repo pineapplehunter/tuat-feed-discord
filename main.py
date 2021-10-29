@@ -25,7 +25,7 @@ def format_post(post: Post):
     if len(post.attachment) != 0:
         attachment_txts = []
         for attachment in post.attachment:
-            attachment_txts.append(f"({attachment.name})[{attachment.url}]")
+            attachment_txts.append(f"[{attachment.name}]({attachment.url})")
         fields.append({"name": "添付ファイル", "value": "\n".join(attachment_txts)})
     embed["fields"] = fields
     embed["author"] = {
@@ -66,7 +66,7 @@ def main(only_update=False):
                 global post_url
                 if type(post_url) is str:
                     post_url = [post_url]
-                
+
                 print(post_url)
 
                 for pu in post_url:
