@@ -3,7 +3,7 @@ from sys import argv
 from typing import Dict, List
 
 from tuat_feed.post import Post
-from url import DISCORD_WEBHOOK_URLS
+from url import DISCORD_WEBHOOK_URLS, DISCORD_ERR_URL
 from datetime import datetime, timedelta, timezone
 import time
 import tuat_feed
@@ -79,11 +79,11 @@ def main(only_update=False):
 
                         global discord_urls
 
-                        for pu in discord_urls[gakubu][category]:
+                        for post_url in discord_urls[gakubu][category]:
                             if not only_update:
-                                while True:
+                                for n in range(5):
                                     ret = requests.post(
-                                        pu,
+                                        post_url,
                                         json=format_post(
                                             post,
                                             5814783
@@ -96,11 +96,20 @@ def main(only_update=False):
                                         break
                                     print(ret.status_code, ret.content)
                                     time.sleep(10)
+                                if n == 10 - 1:
+                                    requests.post(
+                                        DISCORD_ERR_URL,
+                                        json={
+                                            "content": f"""エラー
+                                            {ret.status_code} {ret.content}
+                                            {post}"""
+                                        },
+                                    )
                         f.write(str(num) + "\n")
 
                     except Exception as e:
                         if not only_update:
-                            requests.post(pu, data={"content": str(e)})
+                            requests.post(post_url, data={"content": str(e)})
 
 
 if __name__ == "__main__":
