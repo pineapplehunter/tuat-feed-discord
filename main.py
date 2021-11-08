@@ -1,32 +1,43 @@
 import os
 from sys import argv
-from typing import List, Union
+from typing import Dict, List
 
 from tuat_feed.post import Post
-from url import DISCORD_WEBHOOK_URL
+from url import DISCORD_WEBHOOK_URLS
 from datetime import datetime, timedelta, timezone
 import time
 import tuat_feed
 import requests
 
+import json
+
 url = r"https://api.ihavenojob.work/tuat/"
 # url = r"http://localhost:8000/"
-post_url: Union[str, List[str]] = DISCORD_WEBHOOK_URL
+discord_urls: Dict[str, Dict[str, List[str]]] = DISCORD_WEBHOOK_URLS
 
 num_db_filename = "num.db"
 
 
-def format_post(post: Post):
+def format_post(post: Post, color: int):
     embed = {}
     embed["title"] = post.title
     embed["description"] = post.description
-    embed["color"] = 8912728
+    embed["color"] = color
     fields = [{"name": "カテゴリー", "value": post.category}]
     if len(post.attachment) != 0:
-        attachment_txts = []
-        for attachment in post.attachment:
-            attachment_txts.append(f"[{attachment.name}]({attachment.url})")
-        fields.append({"name": "添付ファイル", "value": "\n".join(attachment_txts)})
+        if len(post.attachment) == 1:
+            attachment = post.attachment[0]
+            fields.append(
+                {"name": "添付ファイル", "value": f"[{attachment.name}]({attachment.url})"}
+            )
+        else:
+            for i, attachment in enumerate(post.attachment):
+                fields.append(
+                    {
+                        "name": f"添付ファイル{i+1}",
+                        "value": f"[{attachment.name}]({attachment.url})",
+                    }
+                )
     embed["fields"] = fields
     embed["author"] = {
         "name": post.origin,
@@ -43,45 +54,53 @@ def format_post(post: Post):
         tzinfo=timezone(timedelta(hours=9)),
     )
     embed["timestamp"] = date.isoformat()
-    return {"content": None, "embeds": [embed]}
+    return {"content": "", "embeds": [embed]}
 
 
 def main(only_update=False):
-    feed = tuat_feed.fetch()
-
     db = []
     if not os.path.exists(num_db_filename):
         open(num_db_filename, "x").close()
     with open(num_db_filename, "r") as f:
         db = f.readlines()
-
     db = list(map(lambda x: int(x.strip()), db))
+
     with open(num_db_filename, "a") as f:
-        for post in feed:
-            try:
-                num = post.post_id
-                if num in db:
-                    continue
 
-                global post_url
-                if type(post_url) is str:
-                    post_url = [post_url]
+        for gakubu in ["technology", "agriculture"]:
+            for category in ["academic", "campus"]:
+                feed = tuat_feed.fetch(gakubu=gakubu, category=category, url=url)
 
-                print(post_url)
+                for post in feed:
+                    try:
+                        num = post.post_id
+                        if num in db:
+                            continue
 
-                for pu in post_url:
-                    if not only_update:
-                        while True:
-                            ret = requests.post(pu, json=format_post(post))
-                            print(ret.status_code, ret.content)
-                            if ret.status_code // 100 == 2:
-                                break
-                            time.sleep(10)
-                f.write(str(num) + "\n")
+                        global discord_urls
 
-            except Exception as e:
-                if not only_update:
-                    requests.post(pu, data={"content": str(e)})
+                        for pu in discord_urls[gakubu][category]:
+                            if not only_update:
+                                while True:
+                                    ret = requests.post(
+                                        pu,
+                                        json=format_post(
+                                            post,
+                                            5814783
+                                            if gakubu == "technology"
+                                            else 8912728,
+                                        ),
+                                    )
+                                    if ret.status_code // 100 == 2:
+                                        print(f"{ret.status_code} Sent!")
+                                        break
+                                    print(ret.status_code, ret.content)
+                                    time.sleep(10)
+                        f.write(str(num) + "\n")
+
+                    except Exception as e:
+                        if not only_update:
+                            requests.post(pu, data={"content": str(e)})
 
 
 if __name__ == "__main__":
