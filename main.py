@@ -21,21 +21,34 @@ num_db_filename = "num.db"
 def format_post(post: Post, color: int):
     embed = {}
     embed["title"] = post.title
-    embed["description"] = post.description
+    embed["description"] = post.description[0:2000]
     embed["color"] = color
-    fields = [{"name": "カテゴリー", "value": post.category}]
+    fields = [
+        {"name": "カテゴリー", "value": post.category},
+        {
+            "name": "対象",
+            "value": post.target if len(post.target) <= 1024 else "長すぎるので省略します",
+        },
+    ]
     if len(post.attachment) != 0:
         if len(post.attachment) == 1:
             attachment = post.attachment[0]
             fields.append(
-                {"name": "添付ファイル", "value": f"[{attachment.name}]({attachment.url})"}
+                {
+                    "name": "添付ファイル",
+                    "value": f"[{attachment.name}]({attachment.url})"
+                    if len(attachment.url) <= 1024
+                    else "URLが長すぎて表示できないので省略します",
+                }
             )
         else:
             for i, attachment in enumerate(post.attachment):
                 fields.append(
                     {
                         "name": f"添付ファイル{i+1}",
-                        "value": f"[{attachment.name}]({attachment.url})",
+                        "value": f"[{attachment.name}]({attachment.url})"
+                        if len(attachment.url) <= 1024
+                        else "URLが長すぎて表示できないので省略します",
                     }
                 )
     embed["fields"] = fields
@@ -94,8 +107,18 @@ def main(only_update=False):
                                     if ret.status_code // 100 == 2:
                                         print(f"{ret.status_code} Sent!")
                                         break
-                                    print(ret.status_code, ret.content)
-                                    time.sleep(10)
+                                    try:
+                                        if ret.status_code == 429:
+                                            retry_after = ret.json()["retry_after"]
+                                            print(f"sleep {retry_after}ms")
+                                            time.sleep(retry_after / 1000)
+                                    except:
+                                        print(
+                                            ret.status_code,
+                                            ret.content,
+                                            format_post(post, 0),
+                                        )
+                                        time.sleep(10)
                                 if n == 10 - 1:
                                     requests.post(
                                         DISCORD_ERR_URL,
