@@ -11,7 +11,7 @@ import requests
 
 import json
 
-url = r"https://api.ihavenojob.work/tuat/"
+url = r"https://api.ihavenojob.work/tuat"
 # url = r"http://localhost:8000/"
 discord_urls: Dict[str, Dict[str, List[str]]] = DISCORD_WEBHOOK_URLS
 
@@ -83,6 +83,7 @@ def main(only_update=False):
         for gakubu in ["technology", "agriculture"]:
             for category in ["academic", "campus"]:
                 feed = tuat_feed.fetch(gakubu=gakubu, category=category, url=url)
+                print(gakubu,category,feed[0])
 
                 for post in feed:
                     try:
@@ -128,7 +129,7 @@ def main(only_update=False):
                                             {post}"""
                                         },
                                     )
-                        f.write(str(num) + "\n")
+                        f.write(str(num) + "\n")     
 
                     except Exception as e:
                         if not only_update:
