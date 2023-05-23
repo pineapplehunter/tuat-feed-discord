@@ -79,13 +79,12 @@ def main(only_update=False):
     db = list(map(lambda x: int(x.strip()), db))
 
     with open(num_db_filename, "a") as f:
-
         for gakubu in ["technology", "agriculture"]:
             for category in ["academic", "campus"]:
                 feed = tuat_feed.fetch(gakubu=gakubu, category=category, url=url)
-                print(gakubu,category,feed[0])
+                print(gakubu, category, feed[0])
 
-                for post in feed:
+                for post in reversed(feed):
                     try:
                         num = post.post_id
                         if num in db:
@@ -129,7 +128,7 @@ def main(only_update=False):
                                             {post}"""
                                         },
                                     )
-                        f.write(str(num) + "\n")     
+                        f.write(str(num) + "\n")
 
                     except Exception as e:
                         if not only_update:
