@@ -3,18 +3,16 @@ from sys import argv
 from typing import Dict, List
 
 from tuat_feed.post import Post
-from url import DISCORD_WEBHOOK_URLS, DISCORD_ERR_URL
 from datetime import datetime, timedelta, timezone
 import time
 import tuat_feed
 import requests
 
 import json
+import argparse
 
 url = r"https://api.ihavenojob.work/tuat"
 # url = r"http://localhost:8000/"
-discord_urls: Dict[str, Dict[str, List[str]]] = DISCORD_WEBHOOK_URLS
-
 num_db_filename = "num.db"
 
 
@@ -70,13 +68,20 @@ def format_post(post: Post, color: int):
     return {"content": "", "embeds": [embed]}
 
 
-def main(only_update=False):
+def fetch_and_send(only_update=False,config_file=""):
     db = []
     if not os.path.exists(num_db_filename):
         open(num_db_filename, "x").close()
     with open(num_db_filename, "r") as f:
         db = f.readlines()
     db = list(map(lambda x: int(x.strip()), db))
+
+    if not only_update:
+        with open(config_file) as f:
+            data = json.load(f)
+            discord_urls: Dict[str, Dict[str, List[str]]] = data["DISCORD_WEBHOOK_URLS"]
+            DISCORD_ERR_URL = data["DISCORD_ERR_URL"]
+
 
     with open(num_db_filename, "a") as f:
         for gakubu in ["technology", "agriculture"]:
@@ -90,10 +95,8 @@ def main(only_update=False):
                         if num in db:
                             continue
 
-                        global discord_urls
-
-                        for post_url in discord_urls[gakubu][category]:
-                            if not only_update:
+                        if not only_update:
+                            for post_url in discord_urls[gakubu][category]:
                                 for n in range(5):
                                     ret = requests.post(
                                         post_url,
@@ -134,10 +137,29 @@ def main(only_update=False):
                         if not only_update:
                             requests.post(post_url, data={"content": str(e)})
 
+def main():
+    parser = argparse.ArgumentParser()
+    sub_parsers = parser.add_subparsers()
+
+    parser_only_update = sub_parsers.add_parser("only-update")
+    parser_only_update.set_defaults(handler=lambda _: fetch_and_send(True))
+
+    parser_run = sub_parsers.add_parser("run")
+    parser_run.add_argument("-c","--config",type=str,required=True)
+    parser_run.set_defaults(handler=lambda args: fetch_and_send(True,args.config))
+
+    args = parser.parse_args()
+    if hasattr(args, 'handler'):
+        args.handler(args)
+    else:
+        # 未知のサブコマンドの場合はヘルプを表示
+        parser.print_help()
+
+    # only_update = False
+    # if len(argv) > 1 and argv[1] == "update":
+    #     print("only update mode")
+    #     only_update = True
+    # main(only_update)
 
 if __name__ == "__main__":
-    only_update = False
-    if len(argv) > 1 and argv[1] == "update":
-        print("only update mode")
-        only_update = True
-    main(only_update)
+    main()

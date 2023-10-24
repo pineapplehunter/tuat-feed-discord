@@ -1,0 +1,21 @@
+{
+    "DISCORD_WEBHOOK_URLS": {
+        "technology": {
+            "academic": [
+                "put your discord webhook url in here and rename this file to 'url.py'"
+            ],
+            "campus": [
+                "put your discord webhook url in here and rename this file to 'url.py'"
+            ]
+        },
+        "agriculture": {
+            "academic": [
+                "put your discord webhook url in here and rename this file to 'url.py'"
+            ],
+            "campus": [
+                "put your discord webhook url in here and rename this file to 'url.py'"
+            ]
+        }
+    },
+    "DISCORD_ERR_URL": "put your discord webhook url in here and rename this file to 'url.py'"
+}
